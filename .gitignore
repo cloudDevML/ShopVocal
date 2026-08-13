@@ -1,0 +1,183 @@
+# =============================================================================
+# .gitignore — Assistant Intelligent Commerçant
+# Stack : FastAPI (Python) + Flutter (Dart) + PostgreSQL (Docker)
+# =============================================================================
+
+# =============================================================================
+# 🔐 SÉCURITÉ — Fichiers avec clés / secrets (NE JAMAIS committer)
+# =============================================================================
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+# .env.example est intentionnellement suivi (modèle sans vraies valeurs)
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials.json
+service_account.json
+# Fichiers sensibles détectés à la racine du projet
+token.txt
+payload.json
+gen_token.py
+tmp_register.py
+tmp_*.py
+
+# =============================================================================
+# 🐍 PYTHON / BACKEND
+# =============================================================================
+
+# Environnement virtuel
+.venv/
+venv/
+env/
+ENV/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Distribution / packaging
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Tests et coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+
+# Logs Python
+*.log
+logs/
+
+# Bases de données locales (SQLite — on utilise PostgreSQL en prod)
+*.db
+*.sqlite
+*.sqlite3
+
+# Fichiers temporaires audio (uploads vocaux)
+*.m4a
+*.wav
+*.mp3
+*.ogg
+*.webm
+*.tmp
+
+# Modèles IA téléchargés localement (faster-whisper, ~250MB)
+# Ces modèles sont téléchargés automatiquement au premier démarrage
+models/
+.cache/huggingface/
+huggingface_cache/
+
+# Scripts de maintenance one-shot (déjà exécutés)
+backend/scripts/
+backend/scratch/
+
+# =============================================================================
+# 🐦 FLUTTER / DART / MOBILE
+# =============================================================================
+
+# Build outputs
+**/build/
+**/ios/Flutter/.last_build_id
+
+# Dépendances Dart / Pub
+.dart_tool/
+.pub-cache/
+.pub/
+.packages
+
+# Flutter plugins (regénérés par flutter pub get)
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Coverage
+/coverage/
+
+# Symbolication / Obfuscation
+app.*.symbols
+app.*.map.json
+
+# Artefacts Android
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/android/.gradle/
+**/android/local.properties
+**/android/gradle-wrapper.jar
+**/android/captures/
+**/android/GeneratedPluginRegistrant.java
+
+# Artefacts iOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/ios/Flutter/Generated.xcconfig
+
+# =============================================================================
+# 🐳 DOCKER
+# =============================================================================
+# Les volumes Docker sont gérés par Docker, pas par Git
+docker-data/
+postgres-data/
+pgdata/
+
+# =============================================================================
+# 💻 IDE & ÉDITEURS
+# =============================================================================
+
+# VS Code (on garde les settings partagés, ignore le workspace perso)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Vim / Emacs
+*.swp
+*.swo
+*~
+\#*\#
+
+# =============================================================================
+# 📦 DIVERS
+# =============================================================================
+
+# Node (si outils JS utilisés)
+node_modules/
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Fichiers de lock OS
+*.lock~

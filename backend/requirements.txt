@@ -1,0 +1,17 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+sqlalchemy>=2.0.28
+psycopg2-binary>=2.9.9
+pydantic>=2.6.4
+pydantic-settings>=2.2.1
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.9
+pytest>=8.1.1
+openai>=1.0.0
+python-dotenv>=1.0.0
+# --- Fallback STT + NLU ---
+groq>=0.9.0                  # Groq : Whisper STT (priorité 1) + LLaMA NLU (priorité 1)
+google-genai>=1.0.0          # Google Gemini nouveau SDK (NLU fallback priorité 2)
+google-generativeai>=0.8.0   # Ancien SDK Gemini (compatibilité)
+faster-whisper>=1.0.0        # Whisper local offline : STT fallback final (sans internet)

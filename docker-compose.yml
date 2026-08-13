@@ -1,0 +1,37 @@
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: assistant_commercant_db
+    restart: always
+    environment:
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: commercant_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Interface Web pour gérer PostgreSQL (Accès via http://localhost:5050)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: assistant_commercant_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+  # Service de Cache / Queue
+  redis:
+    image: redis:7-alpine
+    container_name: assistant_commercant_redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
