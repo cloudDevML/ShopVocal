@@ -4,6 +4,8 @@ import '../../../core/network/api_client.dart';
 import '../../../core/storage/token_storage.dart';
 import '../data/auth_repository.dart';
 
+import '../data/user_profile.dart';
+
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final apiClient = ref.watch(apiClientProvider);
   return AuthRepository(apiClient);
@@ -14,13 +16,19 @@ enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 class AuthState {
   final AuthStatus status;
   final String? errorMessage;
+  final UserProfile? userProfile;
 
-  AuthState({required this.status, this.errorMessage});
+  AuthState({required this.status, this.errorMessage, this.userProfile});
 
-  AuthState copyWith({AuthStatus? status, String? errorMessage}) {
+  AuthState copyWith({
+    AuthStatus? status,
+    String? errorMessage,
+    UserProfile? userProfile,
+  }) {
     return AuthState(
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
+      userProfile: userProfile ?? this.userProfile,
     );
   }
 }
@@ -42,6 +50,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (token != null && token.isNotEmpty) {
         state = AuthState(status: AuthStatus.authenticated);
         debugPrint('[AUTH] → Status: AUTHENTICATED');
+        await loadProfile();
       } else {
         state = AuthState(status: AuthStatus.unauthenticated);
         debugPrint('[AUTH] → Status: UNAUTHENTICATED (pas de token)');
@@ -49,6 +58,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (e) {
       debugPrint('[AUTH] checkAuth() erreur: $e');
       state = AuthState(status: AuthStatus.unauthenticated);
+    }
+  }
+
+  Future<void> loadProfile() async {
+    try {
+      final profile = await _authRepository.getProfile();
+      state = state.copyWith(userProfile: profile);
+      debugPrint('[AUTH] Profil commerçant chargé : ${profile.fullName ?? profile.phoneNumber}');
+    } catch (e) {
+      debugPrint('[AUTH] Erreur chargement profil: $e');
+    }
+  }
+
+  Future<bool> updateProfile({String? fullName, String? password}) async {
+    try {
+      final updated = await _authRepository.updateProfile(fullName: fullName, password: password);
+      state = state.copyWith(userProfile: updated);
+      return true;
+    } catch (e) {
+      debugPrint('[AUTH] Erreur mise à jour profil: $e');
+      return false;
     }
   }
 
@@ -60,6 +90,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _tokenStorage.saveToken(token);
       debugPrint('[AUTH] login() réussi → token sauvegardé');
       state = AuthState(status: AuthStatus.authenticated);
+      await loadProfile();
     } catch (e) {
       debugPrint('[AUTH] login() ERREUR: $e');
       state = AuthState(status: AuthStatus.error, errorMessage: e.toString());
@@ -74,6 +105,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _tokenStorage.saveToken(token);
       debugPrint('[AUTH] register() réussi → token sauvegardé');
       state = AuthState(status: AuthStatus.authenticated);
+      await loadProfile();
     } catch (e) {
       debugPrint('[AUTH] register() ERREUR: $e');
       state = AuthState(status: AuthStatus.error, errorMessage: e.toString());

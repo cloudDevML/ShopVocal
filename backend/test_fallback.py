@@ -6,6 +6,12 @@ Exécuter depuis le dossier backend/ avec le .venv activé :
 import os
 import sys
 
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 # Charger le .env
 from dotenv import load_dotenv
 load_dotenv(".env")

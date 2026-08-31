@@ -19,6 +19,7 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
 import logging
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Configure basic logging for the application (DEBUG during development)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s [%(name)s] %(message)s')
@@ -44,6 +45,15 @@ app = FastAPI(
     title="Assistant Intelligent Commerçant API",
     version="1.0.0",
     description="Backend de gestion commerciale et assistant vocal IA"
+)
+
+# Configuration CORS pour autoriser Flutter Web et clients navigateurs
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.on_event("startup")

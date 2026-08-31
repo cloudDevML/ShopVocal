@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/app_drawer.dart';
+import '../../clients/presentation/clients_screen.dart';
+import '../../transactions/presentation/transactions_screen.dart';
+import '../../settings/presentation/settings_screen.dart';
 import 'dashboard_state.dart';
 
 class DashboardScreen extends ConsumerWidget {
-  const DashboardScreen({super.key});
+  final Function(int)? onTabSelected;
+
+  const DashboardScreen({super.key, this.onTabSelected});
 
   Widget _buildKpiCard({
     required String title,
@@ -66,6 +72,22 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Ma Boutique'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Paramètres du compte',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      drawer: AppDrawer(
+        currentTabIndex: 0,
+        onTabSelected: onTabSelected,
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -79,6 +101,53 @@ class DashboardScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Raccourcis rapides de gestion boutique
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.menu_book_outlined,
+                            label: 'Carnet Dettes',
+                            color: Colors.redAccent,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const ClientsScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.receipt_long_outlined,
+                            label: 'Journal Caisse',
+                            color: Colors.blueAccent,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const TransactionsScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.settings_outlined,
+                            label: 'Paramètres',
+                            color: AppTheme.primaryColor,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     // Titre section KPIs
                     const Text(
                       'Synthèse Financière',
@@ -198,3 +267,50 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 }
+
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

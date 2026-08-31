@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
 import 'features/auth/presentation/auth_screen.dart';
 import 'features/auth/presentation/auth_state.dart';
 import 'features/dashboard/presentation/dashboard_screen.dart';
@@ -24,12 +24,13 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp(
       title: 'Assistant Intelligent Commerçant',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Bascule automatique clair/sombre selon le système
+      themeMode: themeMode,
       debugShowCheckedModeBanner: false,
       home: _getHomeScreen(authState.status),
     );
@@ -64,9 +65,9 @@ class MainDashboardScreen extends ConsumerStatefulWidget {
 class _MainDashboardScreenState extends ConsumerState<MainDashboardScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    InventoryScreen(),
+  late final List<Widget> _screens = [
+    DashboardScreen(onTabSelected: (index) => setState(() => _currentIndex = index)),
+    InventoryScreen(onTabSelected: (index) => setState(() => _currentIndex = index)),
   ];
 
   @override
@@ -122,6 +123,7 @@ class _MainDashboardScreenState extends ConsumerState<MainDashboardScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_main_voice_assistant',
         onPressed: () {
           VoiceAssistantOverlay.show(context);
         },

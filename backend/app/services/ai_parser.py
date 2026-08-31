@@ -101,29 +101,40 @@ def _try_groq_llm(text: str) -> Optional[Dict[str, Any]]:
     try:
         from groq import Groq
         client = Groq(api_key=api_key)
-        resp = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": _USER_PROMPT_TEMPLATE.format(text=text)},
-            ],
-            max_tokens=300,
-            temperature=0.0,
-        )
-        content = resp.choices[0].message.content
-        j = _extract_json_from_text(content)
-        if j:
-            j["_source"] = "groq-llama"
-            result = _normalize_llm_result(j, text)
-            logger.info("[NLU] ✓ Groq LLaMA — type=%s amount=%s product=%s",
-                        result["type"], result["amount"], result["_guessed_product_name"])
-            return result
+        candidate_models = [os.getenv("GROQ_MODEL", "groq/compound-mini"), "llama-3.1-8b-instant"]
+        # Dédupliquer tout en préservant l'ordre
+        models_to_try = list(dict.fromkeys(candidate_models))
+        
+        last_error = None
+        for model in models_to_try:
+            try:
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": _SYSTEM_PROMPT},
+                        {"role": "user", "content": _USER_PROMPT_TEMPLATE.format(text=text)},
+                    ],
+                    max_tokens=300,
+                    temperature=0.0,
+                )
+                content = resp.choices[0].message.content
+                j = _extract_json_from_text(content)
+                if j:
+                    j["_source"] = f"groq-{model}"
+                    result = _normalize_llm_result(j, text)
+                    logger.info("[NLU] ✓ Groq (%s) — type=%s amount=%s product=%s",
+                                model, result["type"], result["amount"], result["_guessed_product_name"])
+                    return result
+            except Exception as ex:
+                last_error = ex
+                if _is_quota_error(str(ex).lower()):
+                    logger.warning("[NLU] Groq quota/rate-limit sur %s : %s", model, ex)
+                    break
+                continue
+        if last_error:
+            logger.warning("[NLU] Groq indisponible (%s), passage au fallback suivant", last_error)
     except Exception as e:
-        msg = str(e).lower()
-        if _is_quota_error(msg):
-            logger.warning("[NLU] Groq quota/rate-limit : %s", e)
-        else:
-            logger.warning("[NLU] Groq LLaMA indisponible (%s), passage au fallback suivant", e)
+        logger.warning("[NLU] Erreur Groq globale (%s), passage au fallback suivant", e)
     return None
 
 

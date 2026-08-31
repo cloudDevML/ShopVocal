@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/app_drawer.dart';
+import '../../settings/presentation/settings_screen.dart';
 import 'inventory_state.dart';
 
 class InventoryScreen extends ConsumerStatefulWidget {
-  const InventoryScreen({super.key});
+  final Function(int)? onTabSelected;
+
+  const InventoryScreen({super.key, this.onTabSelected});
 
   @override
   ConsumerState<InventoryScreen> createState() => _InventoryScreenState();
@@ -115,11 +119,26 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: 'Actualiser le stock',
             onPressed: () {
               ref.read(inventoryProvider.notifier).loadInventory();
             },
-          )
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Paramètres du compte',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+          ),
         ],
+      ),
+      drawer: AppDrawer(
+        currentTabIndex: 1,
+        onTabSelected: widget.onTabSelected,
       ),
       body: state.isLoading && state.products.isEmpty
           ? const Center(child: CircularProgressIndicator())

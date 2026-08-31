@@ -1,11 +1,15 @@
+import 'package:flutter/foundation.dart';
+
 class ApiEndpoints {
-  // En mode développement avec l'émulateur Android, 10.0.2.2 redirige vers la machine hôte (localhost).
-  // Si vous testez sur un appareil physique, remplacez par l'adresse IP locale de votre machine (ex: http://192.168.1.X:8000).
-  static const String baseUrl = 'http://192.168.202.26:8000';
+  // Sur le web (Chrome), localhost:8000 communique directement avec le backend sur la machine hôte.
+  // Sur appareil physique, l'IP locale (192.168.202.35:8000) permet l'accès via le réseau Wi-Fi.
+  static String get baseUrl =>
+      kIsWeb ? 'http://localhost:8000' : 'http://192.168.202.35:8000';
 
   // Routes d'authentification
   static const String login = '/auth/login';
   static const String register = '/auth/register';
+  static const String me = '/auth/me';
 
   // Routes métier
   static const String products = '/products';
