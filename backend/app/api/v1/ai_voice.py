@@ -192,6 +192,8 @@ def text_to_action(payload: TextActionPayload, db: Session = Depends(get_db), cu
         result = process_parsed_action(parsed, db, current_user.id)
         logger.info("text_to_action processed user_id=%s parsed=%s transaction_id=%s", current_user.id, parsed, result.get('id'))
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("Error in text_to_action for user_id=%s: %s", getattr(current_user, 'id', None), e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Erreur lors du traitement du texte")

@@ -1,4 +1,4 @@
-﻿import os
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -101,3 +101,44 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Security(securi
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     return user
+
+
+class UserProfileResponse(BaseModel):
+    id: int
+    phone_number: str
+    full_name: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    password: Optional[str] = None
+
+
+@router.get("/me", response_model=UserProfileResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    """Obtenir le profil du commerçant connecté."""
+    return {
+        "id": current_user.id,
+        "phone_number": current_user.phone_number,
+        "full_name": current_user.full_name,
+        "created_at": current_user.created_at.isoformat() if current_user.created_at else None
+    }
+
+
+@router.put("/me", response_model=UserProfileResponse)
+def update_me(payload: UserProfileUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Mettre à jour les informations du compte commerçant."""
+    if payload.full_name is not None:
+        current_user.full_name = payload.full_name.strip() or None
+    if payload.password and payload.password.strip():
+        current_user.hashed_password = pwd_context.hash(payload.password)
+    db.commit()
+    db.refresh(current_user)
+    return {
+        "id": current_user.id,
+        "phone_number": current_user.phone_number,
+        "full_name": current_user.full_name,
+        "created_at": current_user.created_at.isoformat() if current_user.created_at else None
+    }
+
