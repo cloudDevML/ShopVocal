@@ -1,5 +1,6 @@
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
+import 'user_profile.dart';
 
 class AuthRepository {
   final ApiClient _apiClient;
@@ -27,5 +28,21 @@ class AuthRepository {
       },
     );
     return response.data['access_token'];
+  }
+
+  Future<UserProfile> getProfile() async {
+    final response = await _apiClient.get(ApiEndpoints.me);
+    return UserProfile.fromJson(response.data);
+  }
+
+  Future<UserProfile> updateProfile({String? fullName, String? password}) async {
+    final Map<String, dynamic> data = {};
+    if (fullName != null) data['full_name'] = fullName;
+    if (password != null && password.isNotEmpty) data['password'] = password;
+    final response = await _apiClient.put(
+      ApiEndpoints.me,
+      data: data,
+    );
+    return UserProfile.fromJson(response.data);
   }
 }
