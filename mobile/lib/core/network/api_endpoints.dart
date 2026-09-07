@@ -4,7 +4,7 @@ class ApiEndpoints {
   // Sur le web (Chrome), localhost:8000 communique directement avec le backend sur la machine hôte.
   // Sur appareil physique, l'IP locale (192.168.202.35:8000) permet l'accès via le réseau Wi-Fi.
   static String get baseUrl =>
-      kIsWeb ? 'http://localhost:8000' : 'http://192.168.202.35:8000';
+      kIsWeb ? 'http://localhost:8000' : 'http://192.168.202.73:8000';
 
   // Routes d'authentification
   static const String login = '/auth/login';

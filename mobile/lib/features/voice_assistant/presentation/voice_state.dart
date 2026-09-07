@@ -113,15 +113,21 @@ class VoiceNotifier extends StateNotifier<VoiceState> {
   }
 
   String _translateError(Object e) {
-    final raw = e.toString();
+    String raw = e.toString();
 
-    // Extraire le message "detail" de la réponse JSON du backend (erreurs Dio)
+    // Nettoyage des erreurs typées pour afficher un message lisible
+    raw = raw.replaceFirst(RegExp(r'^(Exception|DioException|Error):\s*'), '');
+    raw = raw.replaceFirst(RegExp(r'^.*?\[bad response\]:\s*'), '');
+
     final detailMatch = RegExp(r'"detail"\s*:\s*"([^"]+)"').firstMatch(raw);
     if (detailMatch != null) {
       return '⚠️ ${detailMatch.group(1)}';
     }
 
-    // Erreurs réseau
+    if (raw.contains('Commande vocale non comprise') || raw.contains('n\u2019a pas pu être interprétée') || raw.contains('non commerciale')) {
+      return '⚠️ Commande non comprise. Réessayez avec une phrase claire : "J\'ai vendu 3 Coca à 1000 FCFA"';
+    }
+
     if (raw.contains('receive timeout') || raw.contains('timed out')) {
       return '⏱️ Le serveur a mis trop longtemps à répondre. Réessayez dans un instant.';
     }
@@ -132,25 +138,18 @@ class VoiceNotifier extends StateNotifier<VoiceState> {
     if (raw.contains('NetworkException') || raw.contains('connection')) {
       return '🌐 Problème de connexion réseau. Vérifiez le Wi-Fi.';
     }
-
-    // Erreurs quota / crédits
     if (raw.contains('quota') || raw.contains('402') || raw.contains('429')) {
       return '💳 Service IA temporairement indisponible. Un mode de secours est actif.';
     }
-
-    // Erreurs audio
     if (raw.contains('transcription') || raw.contains('audio')) {
       return '🎤 Problème de transcription audio. Parlez plus clairement et réessayez.';
     }
-
-    // Stock insuffisant (message du serveur)
     if (raw.contains('Stock insuffisant') || raw.contains('stock')) {
-      return '📦 $raw';
+      return '📦 ${raw.replaceAll(RegExp(r'^(Exception|Error):\s*'), '')}';
     }
 
-    // Fallback : message brut raccourci
-    if (raw.length > 120) return '❌ ${raw.substring(0, 120)}…';
-    return '❌ $raw';
+    if (raw.length > 160) return '❌ ${raw.substring(0, 160)}…';
+    return raw.isEmpty ? '❌ Une erreur est survenue.' : '❌ $raw';
   }
 
   Future<void> processTextCommand(String text) async {

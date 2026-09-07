@@ -43,6 +43,45 @@ _USER_PROMPT_TEMPLATE = (
 )
 
 
+def _looks_like_business_text(text: str) -> bool:
+    """Vérifie qu’une transcription ressemble bien à une commande commerciale."""
+    t = (text or "").strip().lower()
+    if not t:
+        return False
+    business_verbs = re.compile(
+        r"\b(vend|vente|vendu|vendre|achete|achat|acheter|depens|dépens|dépense|payer|payé|paye|prix|solde)\b",
+        flags=re.IGNORECASE,
+    )
+    price_markers = re.compile(
+        r"\b(?:à|pour|fcfa|cfa|xof|francs?|f)\b|\d\s*(?:fcfa|cfa|xof|francs?|f)\b",
+        flags=re.IGNORECASE,
+    )
+    product_hint = re.compile(
+        r"\b(?:coca|cola|eau|riz|huile|sucre|lait|pain|jambon|jus|biere|bierre|soda|savon|cigarette|manioc)\b",
+        flags=re.IGNORECASE,
+    )
+    has_number = bool(re.search(r"\d", t))
+    if business_verbs.search(t):
+        return True
+    return has_number and (price_markers.search(t) or product_hint.search(t))
+
+
+def _invalid_transaction_result(text: str, reason: str) -> Dict[str, Any]:
+    return {
+        "type": "SALE",
+        "amount": 0.0,
+        "description": text,
+        "product_id": None,
+        "quantity": None,
+        "client_id": None,
+        "_guessed_product_name": None,
+        "_guessed_client_name": None,
+        "_source": "rejected",
+        "_invalid": True,
+        "_rejection_reason": reason,
+    }
+
+
 def _normalize_llm_result(j: dict, txt: str) -> Dict[str, Any]:
     """Normalise un résultat JSON brut d'un LLM vers le format interne."""
     if "type" in j and isinstance(j["type"], str):
@@ -101,7 +140,11 @@ def _try_groq_llm(text: str) -> Optional[Dict[str, Any]]:
     try:
         from groq import Groq
         client = Groq(api_key=api_key)
-        candidate_models = [os.getenv("GROQ_MODEL", "groq/compound-mini"), "llama-3.1-8b-instant"]
+        preferred = ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"]
+        override = os.getenv("GROQ_MODEL")
+        if override:
+            preferred.insert(0, override)
+        candidate_models = preferred + ["groq/compound-mini"]
         # Dédupliquer tout en préservant l'ordre
         models_to_try = list(dict.fromkeys(candidate_models))
         
@@ -316,6 +359,10 @@ def parse_text_to_transaction(text: str) -> Dict[str, Any]:
     """
     txt = text.strip()
     logger.info("[NLU] Parsing : %s", txt[:100])
+
+    if not _looks_like_business_text(txt):
+        logger.warning("[NLU] Texte rejeté comme non commercial : %s", txt[:200])
+        return _invalid_transaction_result(txt, "commande non commerciale / transcription incohérente")
 
     # 1. Groq LLaMA 3.1 (priorité 1 — gratuit, ultra-rapide)
     result = _try_groq_llm(txt)
