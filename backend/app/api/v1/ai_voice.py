@@ -187,6 +187,11 @@ def text_to_action(payload: TextActionPayload, db: Session = Depends(get_db), cu
     try:
         # Parser la phrase (mistral/openai ou regex de repli)
         parsed = parse_text_to_transaction(payload.text)
+        if parsed.get("_invalid"):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Commande vocale non comprise ou non commerciale. Réessayez avec une phrase du type : \"J'ai vendu 3 Coca-Cola à 1000 FCFA\"."
+            )
 
         # Traiter et enregistrer l'action
         result = process_parsed_action(parsed, db, current_user.id)
@@ -238,6 +243,11 @@ def voice_to_action(file: UploadFile = File(...), db: Session = Depends(get_db),
         try:
             # Parser et enregistrer l'action
             parsed = parse_text_to_transaction(transcribed_text)
+            if parsed.get("_invalid"):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail="La commande vocale n’a pas pu être interprétée comme une vente/achat/dépense. Réessayez en articulant clairement le produit, la quantité et le prix."
+                )
             result = process_parsed_action(parsed, db, current_user.id)
             # Ajouter le texte transcrit à la réponse pour l'expérience utilisateur
             result["transcribed_text"] = transcribed_text

@@ -25,16 +25,23 @@ class VoiceRepository {
       ),
     });
 
-    // On utilise _apiClient.dio pour passer les options multipart/form-data personnalisées
-    final response = await _apiClient.dio.post(
-      ApiEndpoints.voiceToAction,
-      data: formData,
-      options: Options(
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      ),
-    );
-    return AiActionModel.fromJson(response.data);
+    try {
+      final response = await _apiClient.dio.post(
+        ApiEndpoints.voiceToAction,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+      return AiActionModel.fromJson(response.data);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map && data['detail'] != null) {
+        throw Exception(data['detail'].toString());
+      }
+      throw Exception(e.message ?? 'Erreur lors de l’envoi du fichier audio.');
+    }
   }
 }
